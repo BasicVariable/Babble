@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<VBox alignment="CENTER_LEFT" spacing="10.0" stylesheets="@mStyle.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.Babble.SettingsController">
+    <children>
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="API Format" />
+        <RadioButton fx:id="radioLMStudio" mnemonicParsing="false" selected="true" style="-fx-text-fill: white;" text="LM Studio">
+            <toggleGroup>
+                <ToggleGroup fx:id="endpointGroup" />
+            </toggleGroup>
+        </RadioButton>
+
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="API Endpoint URL" />
+        <TextField fx:id="urlField" promptText="http://localhost:1234" />
+
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Model ID" />
+        <TextField fx:id="modelField" promptText="local-model" />
+
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="OCR Mode" />
+        <ComboBox fx:id="ocrModeCombo" prefWidth="250.0" />
+        
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Vision Model ID" />
+        <TextField fx:id="visionModelField" promptText="minicpm-v-2.6" />
+
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Language" />
+        <ComboBox fx:id="languageCombo" prefWidth="250.0" />
+
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Drag Bar Position" />
+        <ComboBox fx:id="dragPosCombo" prefWidth="250.0" />
+        
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Translation Primer (Context)" />
+        <javafx.scene.control.TextArea fx:id="primerArea" prefHeight="80.0" prefWidth="250.0" wrapText="true" promptText="e.g. Translate as if spoken by a pirate..." />
+
+        <CheckBox fx:id="wcsCheckbox" mnemonicParsing="false" style="-fx-text-fill: white;" text="Windows Constant Scan (Windows Only)" />
+        
+        <HBox alignment="CENTER_RIGHT" spacing="10.0" VBox.vgrow="ALWAYS">
+             <Button onAction="#onSave" styleClass="text-button" text="Save &amp; Close" />
+             <VBox.margin>
+                <Insets top="10.0" />
+             </VBox.margin>
+        </HBox>
+    </children>
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+    <style>
+        -fx-background-color: #000000; -fx-border-color: #000000; -fx-border-width: 2;
+    </style>
+</VBox>

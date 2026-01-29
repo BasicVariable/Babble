@@ -1,0 +1,8 @@
+apiUrl: http://localhost:1234
+dragPosition: TOP
+modelName: qwen/qwen2.5-vl-7b
+ocrMode: DOCUMENT_TESSERACT
+targetLanguage: jpn
+translationPrimer: ''
+visionModelName: huihui-minicpm-v-4_5-abliterated
+windowsConstantScan: false

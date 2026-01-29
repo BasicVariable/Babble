@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
+
+<BorderPane fx:id="rootPane" stylesheets="@mStyle.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.Babble.MenuController">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="control-bar" BorderPane.alignment="CENTER">
+            <children>
+                <Button fx:id="startButton" mnemonicParsing="false" onAction="#onStart" styleClass="action-button" text="▶" />
+                <Button fx:id="stopButton" disable="true" mnemonicParsing="false" onAction="#onStop" styleClass="stop-button" text="■" />
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button fx:id="settingsButton" mnemonicParsing="false" onAction="#onOpenSettings" styleClass="action-button" text="⚙" />
+                <Button fx:id="closeButton" mnemonicParsing="false" onAction="#onClose" styleClass="close-button" text="X" />
+            </children>
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+        </HBox>
+    </top>
+    <center>
+        <StackPane BorderPane.alignment="CENTER">
+            <children>
+                <Pane fx:id="transparentPane" styleClass="transparent-area" />
+                <Label fx:id="overlayLabel" alignment="TOP_LEFT" mouseTransparent="true" styleClass="overlay-text" text="Translation will appear here..." wrapText="true" visible="false" />
+            </children>
+        </StackPane>
+    </center>
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+    </padding>
+</BorderPane>
