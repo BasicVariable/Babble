@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 public class PlatformUtils {
     private static final int GWL_EXSTYLE = -20;
     private static final int WS_EX_LAYERED = 0x80000;
-    private static final int WS_EX_TRANSPARENT = 0x20;
+    // private static final int WS_EX_TRANSPARENT = 0x20;
     private static final int WS_EX_NOACTIVATE = 0x08000000;
     private static final int WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
@@ -35,7 +35,7 @@ public class PlatformUtils {
             int exStyle = User32.INSTANCE.GetWindowLong(hwnd, GWL_EXSTYLE);
             User32.INSTANCE.SetWindowLong(
                 hwnd, GWL_EXSTYLE,
-                exStyle | WS_EX_LAYERED | WS_EX_NOACTIVATE
+                exStyle | WS_EX_LAYERED | WS_EX_NOACTIVATE // | WS_EX_TRANSPARENT labels can scroll now, but no click through... maybe make it an option idk?
             );
         }
     }
