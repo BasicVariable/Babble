@@ -1,10 +1,10 @@
 package com.Babble.OCR;
 
 public enum OCRMode {
-    DOCUMENT_TESSERACT("Document Mode (Standard)"),
-    GAME_VISION_LLM("Game Mode (AI Vision)"),
-    GAME_PADDLE_OCR("Game Mode (Paddle)"),
-    GAME_HYBRID("Game Mode (Hybrid)");
+    DOCUMENT_TESSERACT("Document Mode"),
+    GAME_VISION_LLM("AI Vision"),
+    GAME_PADDLE_OCR("Paddle"),
+    GAME_HYBRID("Hybrid");
 
     private final String displayName;
 

@@ -101,3 +101,12 @@
     -fx-font-size: 14px;
     -fx-font-smoothing-type: gray;
 }
+
+.overlay-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.overlay-scroll .viewport {
+    -fx-background-color: transparent;
+}

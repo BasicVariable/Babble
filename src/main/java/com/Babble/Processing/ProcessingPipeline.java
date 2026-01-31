@@ -90,6 +90,7 @@ public class ProcessingPipeline {
         }
     }
 
+
     public void setModel(String model) {
         this.currentModel = model;
     }
@@ -407,5 +408,9 @@ public class ProcessingPipeline {
             }
         }
         return best;
+    }
+
+    public OCRMode getCurrentOCRMode() {
+        return this.currentOCRMode;
     }
 }

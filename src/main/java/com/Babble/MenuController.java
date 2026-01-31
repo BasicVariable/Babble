@@ -270,52 +270,104 @@ public class MenuController {
             root.getChildren().removeIf(node -> node != floatingLabel);
 
             for (TranslationResult res : results) {
-                String textToShow = (res.translatedText == null || res.translatedText.trim().isEmpty())?
-                    res.originalText + " (?)"
-                    :
-                    res.translatedText
-                ;
-
-                if (isWCSMode() && !processing.isScanning()) break;
-                if (textToShow.trim().isEmpty()) continue;
-
-                textToShow = textToShow.replace("\n", " ").replace("\r", " ").replace("\u00A0", " ");
-
-                Label label = new Label(textToShow);
-
-                double
-                    heightBasedSize = Math.max(12, Math.min(res.h * 0.7, 60)),
-                    textLength = Math.max(1, textToShow.length()),
-                    area = res.w * res.h,
-                    densityBasedSize = Math.sqrt((area * 0.5) / textLength),
-                    fontSize = Math.min(heightBasedSize, densityBasedSize)
-                ;
-
-                fontSize = Math.max(12, Math.min(fontSize, 60));
-                boolean isVertical = res.h > (res.w * 1.1);
-
-                String baseStyle = String.format("-fx-font-size: %.1fpx;", fontSize);
-
-                label.getStyleClass().add("overlay-label");
-
-                label.setStyle(baseStyle);
-                label.setLayoutX(res.x);
-                label.setLayoutY(res.y);
-
-                if (isVertical) {
-                    label.setWrapText(false);
-                    label.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
-                    label.setMaxWidth(600);
-                } else {
-                    label.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
-                    label.setPrefWidth(res.w);
-                    label.setMaxWidth(res.w * 1.1);
-                    label.setWrapText(true);
-                }
-
-                root.getChildren().add(label);
+                displayLabel(res, root);
             }
         });
+    }
+
+    private void displayLabel(TranslationResult res, Pane root) {
+        String textToShow = (res.translatedText == null || res.translatedText.trim().isEmpty())?
+            res.originalText + " (? / Err)"
+            :
+            res.translatedText
+        ;
+        if (textToShow.trim().isEmpty()) return;
+
+        OCRMode mode = processing.getCurrentOCRMode();
+        boolean useScrollableOverlay = (
+                mode == OCRMode.DOCUMENT_TESSERACT ||
+                mode == OCRMode.GAME_VISION_LLM ||
+                mode == OCRMode.GAME_HYBRID // very debatable, need more tests
+        );
+
+        if (useScrollableOverlay) {
+            Label label = new Label(textToShow);
+
+            double
+                heightBasedSize = Math.max(12, Math.min(res.h * 0.7, 60)),
+                textLength = Math.max(1, textToShow.length()),
+                area = res.w * res.h,
+                densityBasedSize = Math.sqrt((area * 0.8) / textLength),
+                fontSize = Math.min(heightBasedSize, densityBasedSize)
+            ;
+            fontSize = Math.max(14, Math.min(fontSize, 48));
+
+            String baseStyle = String.format("-fx-font-size: %.1fpx;", fontSize);
+            label.setWrapText(true);
+            label.getStyleClass().add("overlay-label");
+            label.setStyle(baseStyle);
+            label.setPadding(new javafx.geometry.Insets(5));
+
+            javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(label);
+            scroll.getStyleClass().add("overlay-scroll");
+            scroll.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+            scroll.setVbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            scroll.setFitToWidth(true);
+            scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+
+            scroll.setLayoutX(res.x);
+            scroll.setLayoutY(res.y);
+            scroll.setMinWidth(res.w);
+            scroll.setMaxWidth(res.w * 1.5);
+            scroll.setPrefWidth(res.w);
+
+            double
+                windowHeight = root
+                    .getScene()
+                    .getWindow()
+                    .getHeight(),
+                flexibleMaxHeight = Math.max(100, windowHeight - 20)
+            ;
+
+            scroll.setMinHeight(res.h);
+            scroll.setPrefHeight(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            scroll.setMaxHeight(flexibleMaxHeight);
+
+            root.getChildren().add(scroll);
+        } else {
+            textToShow = textToShow.replace("\n", " ").replace("\r", " ").replace("\u00A0", " ");
+
+            Label label = new Label(textToShow);
+
+            double
+                heightBasedSize = Math.max(12, Math.min(res.h * 0.7, 60)),
+                textLength = Math.max(1, textToShow.length()),
+                area = res.w * res.h,
+                densityBasedSize = Math.sqrt((area * 0.5) / textLength),
+                fontSize = Math.min(heightBasedSize, densityBasedSize)
+            ;
+            fontSize = Math.max(12, Math.min(fontSize, 60));
+
+            String baseStyle = String.format("-fx-font-size: %.1fpx;", fontSize);
+            label.setStyle(baseStyle);
+            label.setLayoutX(res.x);
+            label.setLayoutY(res.y);
+            label.getStyleClass().add("overlay-label");
+
+            boolean isVertical = res.h > (res.w * 1.1);
+
+            if (isVertical) {
+                label.setWrapText(false);
+                label.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+                label.setMaxWidth(600);
+            } else {
+                label.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+                label.setPrefWidth(res.w);
+                label.setMaxWidth(res.w * 1.1);
+                label.setWrapText(true);
+            }
+            root.getChildren().add(label);
+        }
     }
 
     private void onProcessingStart() {

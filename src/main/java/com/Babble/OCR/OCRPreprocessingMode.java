@@ -1,10 +1,10 @@
 package com.Babble.OCR;
 
 public enum OCRPreprocessingMode {
-    NATIVE("Native (No Scaling)"),
-    UPSCALED("Upscaled (Standard)"),
-    LETTERBOXED("Letterboxed (Padding)"),
-    AUTO("Auto (Smart Switch)");
+    NATIVE("Native"),
+    UPSCALED("Upscaled"),
+    LETTERBOXED("Letterboxed"),
+    AUTO("Auto");
 
     private final String displayName;
 
