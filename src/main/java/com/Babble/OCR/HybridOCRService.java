@@ -4,6 +4,9 @@ import com.Babble.Processing.TranslationResult;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.Graphics2D;
+import java.awt.Color;
+import java.awt.Font;
 
 public class HybridOCRService implements OCRService {
     private final PaddleOCRService paddleService;
@@ -12,6 +15,77 @@ public class HybridOCRService implements OCRService {
     public HybridOCRService(PaddleOCRService paddleService, VisionClient visionClient) {
         this.paddleService = paddleService;
         this.visionClient = visionClient;
+    }
+
+    private BufferedImage createCollageImage(BufferedImage src, List<int[]> boxes) {
+        int
+            padding = 10,
+            labelWidth = 50,
+            totalH = 0,
+            maxW = 0
+        ;
+
+        List<BufferedImage> crops = new ArrayList<>();
+        for (int[] box : boxes) {
+            int
+                x = box[0], y = box[1], w = box[2], h = box[3],
+                sx = Math.max(0, x - 5),
+                sy = Math.max(0, y - 5),
+                sw = Math.min(src.getWidth(), x + w + 5) - sx,
+                sh = Math.min(src.getHeight(), y + h + 5) - sy
+            ;
+            if (sw <= 0 || sh <= 0) continue;
+
+            BufferedImage crop = src.getSubimage(sx, sy, sw, sh);
+
+            // acc for small crops
+            if (crop.getHeight() < 48) {
+                double scale = 48.0 / crop.getHeight();
+                int scaledW = (int) (crop.getWidth() * scale);
+                int scaledH = 48;
+                crop = com.Babble.ImageUtils.resize(crop, scaledW, scaledH);
+            }
+
+            crops.add(crop);
+
+            totalH += crop.getHeight() + padding;
+            if (crop.getWidth() > maxW) {
+                maxW = crop.getWidth();
+            }
+        }
+
+        int
+            collageW = maxW + labelWidth + padding,
+            collageH = totalH + padding
+        ;
+
+        BufferedImage collage = new BufferedImage(collageW, collageH, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = collage.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, collageW, collageH);
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Arial", Font.BOLD, 24));
+
+        int currentY = padding;
+        for (int i = 0; i < crops.size(); i++) {
+            BufferedImage crop = crops.get(i);
+
+            g.drawString(String.valueOf(i), 10, currentY + (crop.getHeight() / 2) + 8);
+            g.drawImage(crop, labelWidth, currentY, null);
+
+            g.setColor(Color.LIGHT_GRAY);
+            g.drawLine(
+                0,
+                currentY + crop.getHeight() + (padding / 2), collageW,
+                currentY + crop.getHeight() + (padding / 2)
+            );
+            g.setColor(Color.BLACK);
+
+            currentY += crop.getHeight() + padding;
+        }
+        g.dispose();
+
+        return collage;
     }
 
     @Override
@@ -24,12 +98,14 @@ public class HybridOCRService implements OCRService {
             System.out.println("Hybrid - Found " + boxes.size() + " boxes.");
 
             if (boxes.isEmpty()) return results;
+
+            /*
             boxes = mergeVerticalBoxes(boxes);
             System.out.println("Hybrid - Merged into " + boxes.size() + " boxes.");
+             */
 
-            // all of these llms are soooo dumb (even larger models), so I'm pointing out
-            // what I want them to read.
-            BufferedImage annotatedImage = createMaskedImage(image, boxes);
+            // collages are better
+            BufferedImage annotatedImage = createCollageImage(image, boxes);
 
             /* testing
                 try {
@@ -42,14 +118,13 @@ public class HybridOCRService implements OCRService {
             System.out.println("Hybrid - Sending Annotated Image to vision LLM");
 
             String prompt =
-                "Transcribe the Japanese text inside the Red Boxes.\n" +
+                "Transcribe the Japanese text in this collage.\n" +
+                "Each text block is numbered on the left (e.g. 0, 1, 2).\n" +
                 "Instructions:\n" +
-                "- Transcribe EXACTLY character-by-character. Do NOT summarize.\n" +
-                "- Output Japanese characters. Do NOT translate to English.\n" +
-                "- Text is mostly VERTICAL. Read from top to bottom.\n" +
+                "- Transcribe the text corresponding to each number EXACTLY.\n" +
+                "- Do NOT translate to English. Keep valid Japanese.\n" +
                 "- Return a STRICT JSON object mapping ID to Text.\n" +
-                "- Example: {\"0\": \"こんにちは\", \"1\": \"テスト\"}\n" +
-                "- Do NOT include brackets like [ ] in the output.\n" +
+                "- Example: {\"0\": \"戦い方のヒント\", \"1\": \"清涼のバレル\"}\n" +
                 "- Return ONLY valid JSON."
             ;
 
@@ -76,83 +151,6 @@ public class HybridOCRService implements OCRService {
         }
 
         return results;
-    }
-
-    private BufferedImage createMaskedImage(BufferedImage src, List<int[]> boxes) {
-        int
-            padLeft = 60,
-            padTop = 40,
-            newW = src.getWidth() + padLeft + 40,
-            newH = src.getHeight() + (padTop * 2)
-        ;
-
-        BufferedImage dest = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_RGB);
-        java.awt.Graphics2D g = dest.createGraphics();
-        g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(java.awt.Color.BLACK);
-        g.fillRect(0, 0, newW, newH);
-
-        g.setStroke(new java.awt.BasicStroke(2));
-        g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 24)); // Large font for AI readability
-
-        for (int i = 0; i < boxes.size(); i++) {
-            int[] box = boxes.get(i);
-            int
-                x = box[0] + padLeft,
-                y = box[1] + padTop,
-                w = box[2],
-                h = box[3]
-            ;
-
-            int
-                padding = 40,
-                sx = Math.max(0, box[0] - padding),
-                sy = Math.max(0, box[1] - padding),
-                sw = Math.min(src.getWidth(), box[0] + w + padding) - sx,
-                sh = Math.min(src.getHeight(), box[1] + h + padding) - sy
-            ;
-
-            g.drawImage(
-                src,
-                x - (box[0] - sx),
-                y - (box[1] - sy),
-                x - (box[0] - sx) + sw,
-                y - (box[1] - sy) + sh,
-                sx,
-                sy,
-                sx + sw,
-                sy + sh,
-                null
-            );
-
-            g.setColor(java.awt.Color.RED);
-            g.setStroke(new java.awt.BasicStroke(3));
-
-            int
-                d = 25,
-                dx = x - d,
-                dy = y - d,
-                dw = w + (d * 2),
-                dh = h + (d * 2)
-            ;
-            g.drawRect(dx, dy, dw, dh);
-
-            int idX = dx - 35;
-            if (idX < 5) idX = 5;
-
-            int midY = y + (h / 2);
-            g.setStroke(new java.awt.BasicStroke(2));
-            g.setColor(java.awt.Color.RED);
-            int textWidth = 15;
-            g.drawLine(idX + textWidth, midY, dx, midY);
-
-            String id = String.valueOf(i);
-            g.setColor(java.awt.Color.RED);
-            g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 24));
-            g.drawString(id, idX, midY + 8);
-        }
-        g.dispose();
-        return dest;
     }
 
     private org.json.JSONObject parseResponse(String raw) {

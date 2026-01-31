@@ -2,6 +2,7 @@ package com.Babble.Config;
 
 import com.Babble.DragBarPosition;
 import com.Babble.OCR.OCRMode;
+import com.Babble.OCR.OCRPreprocessingMode;
 
 // settings.yml
 public class Config {
@@ -12,11 +13,20 @@ public class Config {
         ocrMode = "DOCUMENT_TESSERACT",
         targetLanguage = "jpn",
         dragPosition = "TOP",
-        translationPrimer = ""
+        translationPrimer = "",
+        ocrPreprocessingMode = "NATIVE"
     ;
     public boolean windowsConstantScan = false;
 
     public Config() {}
+
+    public OCRPreprocessingMode getOCRPreprocessingModeEnum() {
+        try {
+            return OCRPreprocessingMode.valueOf(ocrPreprocessingMode);
+        } catch (Exception e) {
+            return OCRPreprocessingMode.NATIVE;
+        }
+    }
 
     public OCRMode getOCRModeEnum() {
         try {

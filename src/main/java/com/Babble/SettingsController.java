@@ -23,6 +23,8 @@ public class SettingsController {
     private javafx.scene.control.CheckBox wcsCheckbox;
     @FXML
     private javafx.scene.control.TextArea primerArea;
+    @FXML
+    private ComboBox<com.Babble.OCR.OCRPreprocessingMode> preprocessingModeCombo;
 
     private Stage settingsStage;
     private MenuController mainController;
@@ -34,11 +36,13 @@ public class SettingsController {
         dragPosCombo.getItems().setAll(DragBarPosition.values());
 
         languageCombo.getItems().addAll("jpn");
+        preprocessingModeCombo.getItems().setAll(com.Babble.OCR.OCRPreprocessingMode.values());
 
         urlField.setText(controller.getCurrentApiUrl());
         modelField.setText(controller.getCurrentModel());
         visionModelField.setText(controller.getCurrentVisionModel());
         ocrModeCombo.getSelectionModel().select(controller.getCurrentOCRMode());
+        preprocessingModeCombo.getSelectionModel().select(controller.getCurrentOCRPreprocessingMode());
 
         languageCombo.getSelectionModel().select(controller.getCurrentLanguage());
         dragPosCombo.getSelectionModel().select(controller.getCurrentDragPosition());
@@ -67,19 +71,18 @@ public class SettingsController {
         ;
         OCRMode selectedMode = ocrModeCombo.getSelectionModel().getSelectedItem();
         DragBarPosition selectedPos = dragPosCombo.getSelectionModel().getSelectedItem();
+        com.Babble.OCR.OCRPreprocessingMode selectedPrep = preprocessingModeCombo.getSelectionModel().getSelectedItem();
         boolean wcs = wcsCheckbox.isSelected();
 
-        if (newUrl == null || newUrl.trim().isEmpty()) {
+        if (newUrl == null || newUrl.trim().isEmpty())
             newUrl = "http://localhost:1234";
-        }
 
-        if (newModel == null || newModel.trim().isEmpty()) {
+
+        if (newModel == null || newModel.trim().isEmpty())
             newModel = "local-model";
-        }
 
-        if (newVisionModel == null || newVisionModel.trim().isEmpty()) {
+        if (newVisionModel == null || newVisionModel.trim().isEmpty())
             newVisionModel = "minicpm-v-2.6";
-        }
 
         if (selectedMode == null)
             selectedMode = OCRMode.DOCUMENT_TESSERACT;
@@ -91,11 +94,15 @@ public class SettingsController {
 
         if (primer == null) primer = "";
 
+        if (selectedPrep == null)
+            selectedPrep = com.Babble.OCR.OCRPreprocessingMode.NATIVE;
+
         mainController.updateSettings(
             newUrl,
             newModel,
             newVisionModel,
             selectedMode,
+            selectedPrep,
             selectedLang,
             selectedPos,
             wcs,

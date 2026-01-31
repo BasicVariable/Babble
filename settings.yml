@@ -1,8 +1,10 @@
 apiUrl: http://localhost:1234
 dragPosition: TOP
 modelName: qwen/qwen2.5-vl-7b
-ocrMode: DOCUMENT_TESSERACT
+ocrMode: GAME_VISION_LLM
+ocrPreprocessingMode: AUTO
 targetLanguage: jpn
-translationPrimer: ''
+translationPrimer: You're reading game instructions, please account for the fact that
+  some words might actually be names of actions and people.
 visionModelName: huihui-minicpm-v-4_5-abliterated
 windowsConstantScan: false

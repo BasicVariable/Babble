@@ -32,6 +32,9 @@
         <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Vision Model ID" />
         <TextField fx:id="visionModelField" promptText="minicpm-v-2.6" />
 
+        <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Image Preprocessing" />
+        <ComboBox fx:id="preprocessingModeCombo" prefWidth="250.0" />
+
         <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Language" />
         <ComboBox fx:id="languageCombo" prefWidth="250.0" />
 

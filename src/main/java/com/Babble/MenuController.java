@@ -200,6 +200,7 @@ public class MenuController {
         processing.setPrimer(currentPrimer);
         processing.setVisionModel(config.visionModelName);
         processing.setOCRMode(config.getOCRModeEnum());
+        processing.setPreprocessingMode(config.getOCRPreprocessingModeEnum());
     }
 
     public void updateSettings(
@@ -207,6 +208,7 @@ public class MenuController {
         String model,
         String visionModel,
         OCRMode mode,
+        com.Babble.OCR.OCRPreprocessingMode prepMode,
         String lang,
         DragBarPosition pos,
         boolean wcs,
@@ -218,6 +220,7 @@ public class MenuController {
         config.modelName = model;
         config.visionModelName = visionModel;
         config.ocrMode = mode.name();
+        config.ocrPreprocessingMode = prepMode.name();
         config.targetLanguage = lang;
         config.dragPosition = pos.name();
         config.windowsConstantScan = wcs;
@@ -240,6 +243,7 @@ public class MenuController {
         processing.setModel(model);
         processing.setVisionModel(visionModel);
         processing.setOCRMode(mode);
+        processing.setPreprocessingMode(prepMode);
         processing.setScanning(wasScanning);
         processing.setPrimer(primer);
     }
@@ -266,24 +270,27 @@ public class MenuController {
             root.getChildren().removeIf(node -> node != floatingLabel);
 
             for (TranslationResult res : results) {
-                String textToShow = (res.translatedText == null || res.translatedText.trim().isEmpty())
-                        ? res.originalText + " (?)"
-                        : res.translatedText;
+                String textToShow = (res.translatedText == null || res.translatedText.trim().isEmpty())?
+                    res.originalText + " (?)"
+                    :
+                    res.translatedText
+                ;
 
-                if (isWCSMode() && !processing.isScanning())
-                    break;
-                if (textToShow.trim().isEmpty())
-                    continue;
+                if (isWCSMode() && !processing.isScanning()) break;
+                if (textToShow.trim().isEmpty()) continue;
 
                 textToShow = textToShow.replace("\n", " ").replace("\r", " ").replace("\u00A0", " ");
 
                 Label label = new Label(textToShow);
 
-                double heightBasedSize = Math.max(12, Math.min(res.h * 0.7, 60));
-                double textLength = Math.max(1, textToShow.length());
-                double area = res.w * res.h;
-                double densityBasedSize = Math.sqrt((area * 0.5) / textLength);
-                double fontSize = Math.min(heightBasedSize, densityBasedSize);
+                double
+                    heightBasedSize = Math.max(12, Math.min(res.h * 0.7, 60)),
+                    textLength = Math.max(1, textToShow.length()),
+                    area = res.w * res.h,
+                    densityBasedSize = Math.sqrt((area * 0.5) / textLength),
+                    fontSize = Math.min(heightBasedSize, densityBasedSize)
+                ;
+
                 fontSize = Math.max(12, Math.min(fontSize, 60));
                 boolean isVertical = res.h > (res.w * 1.1);
 
@@ -418,6 +425,10 @@ public class MenuController {
     }
 
     //
+
+    public com.Babble.OCR.OCRPreprocessingMode getCurrentOCRPreprocessingMode() {
+        return config.getOCRPreprocessingModeEnum();
+    }
 
     public String getCurrentLanguage() {
         return config.targetLanguage;

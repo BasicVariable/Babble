@@ -1,13 +1,7 @@
 package com.Babble.Processing;
 
 import com.Babble.ImageUtils;
-import com.Babble.OCR.HybridOCRService;
-import com.Babble.OCR.OCRMode;
-import com.Babble.OCR.OCRService;
-import com.Babble.OCR.PaddleOCRService;
-import com.Babble.OCR.TesseractOCRService;
-import com.Babble.OCR.VisionClient;
-import com.Babble.OCR.VisionLLMOCRService;
+import com.Babble.OCR.*;
 import com.Babble.Translation.ApiClient;
 import javafx.scene.layout.Pane;
 
@@ -37,6 +31,12 @@ public class ProcessingPipeline {
     private String currentVisionModel = "huihui-minicpm-v-4_5-abliterated";
     private OCRMode currentOCRMode = OCRMode.DOCUMENT_TESSERACT;
     private String translationPrimer = "";
+
+    private OCRPreprocessingMode currentPreprocessingMode = OCRPreprocessingMode.AUTO;
+
+    public void setPreprocessingMode(OCRPreprocessingMode mode) {
+        this.currentPreprocessingMode = mode;
+    }
 
     public ProcessingPipeline(
         String dataPath,
@@ -85,7 +85,7 @@ public class ProcessingPipeline {
             case GAME_VISION_LLM -> this.ocrService = visionService;
             case GAME_PADDLE_OCR -> this.ocrService = paddleService;
             case GAME_HYBRID -> this.ocrService = hybridService;
-            case DOCUMENT_TESSERACT -> this.ocrService = tesseractService; // Default
+            // case DOCUMENT_TESSERACT -> this.ocrService = tesseractService;
             default -> this.ocrService = tesseractService;
         }
     }
@@ -111,8 +111,7 @@ public class ProcessingPipeline {
     }
 
     private void processLoop(boolean force) {
-        if (!scanning)
-            return;
+        if (!scanning) return;
 
         try {
             if (callback != null) {
@@ -157,34 +156,56 @@ public class ProcessingPipeline {
                 callback.onProcessingStart();
             }
 
-            BufferedImage upscaledVer;
-            if (currentOCRMode == OCRMode.GAME_VISION_LLM || currentOCRMode == OCRMode.GAME_HYBRID) {
-                // Vision models (minicpm cough cough) hallucinate heavily with EXTREME upscaling, but need some size for small crops
-                if (capture.getWidth() < 600 || capture.getHeight() < 600) {
-                    upscaledVer = ImageUtils.upscaleImage(capture);
-                    System.out.println(
-                        "Upscaling small Vision input: " +
-                        capture.getWidth() +
-                        "x" +
-                        capture.getHeight() +
-                        " -> " +
-                        upscaledVer.getWidth() +
-                        "x" +
-                        upscaledVer.getHeight()
-                    );
-                } else {
-                    upscaledVer = capture;
-                }
+            OCRPreprocessingMode mode = currentPreprocessingMode;
+            BufferedImage processedImage;
 
-                /* for testing
-                    try {
-                        javax.imageio.ImageIO.write(upscaledVer, "png", new java.io.File("debug_vision_input.png"));
-                    } catch (java.io.IOException ignored) {
+            switch (mode) {
+                case NATIVE -> {
+                    System.out.println("Mode NATIVE. Passing original image: " + capture.getWidth() + "x" + capture.getHeight());
+                    processedImage = capture;
+                }
+                case LETTERBOXED -> {
+                    processedImage = ImageUtils.letterboxImage(capture, 32);
+                    System.out.println("Mode LETTERBOXED. Resized to: " + processedImage.getWidth() + "x" + processedImage.getHeight());
+                }
+                case UPSCALED -> {
+                    processedImage = ImageUtils.upscaleImage(capture);
+                    System.out.println("Mode UPSCALED. Resized to: " + processedImage.getWidth() + "x" + processedImage.getHeight());
+                }
+                case AUTO -> {
+                    processedImage = capture;
+
+                    if (currentOCRMode == OCRMode.GAME_PADDLE_OCR || currentOCRMode == OCRMode.GAME_HYBRID) {
+                        System.out.println("Auto says NATIVE");
+                    } else {
+                        int
+                            w = capture.getWidth(),
+                            h = capture.getHeight()
+                        ;
+                        double ratio = (double) w / h;
+
+                        if (w < 800 || h < 800) {
+                            System.out.println("Auto says image is small (" + w + "x" + h + "), swap to UPSCALED.");
+                            processedImage = ImageUtils.upscaleImage(capture);
+                        } else if (ratio > 2.5 || ratio < 0.4) {
+                            System.out.println("Auto says aspect ratio extreme (" + ratio + "), swap to LETTERBOXED.");
+                            processedImage = ImageUtils.letterboxImage(capture, 32);
+                        } else {
+                            System.out.println("Auto says standard ratio/size, use NATIVE.");
+                        }
                     }
-                 */
-            } else {
-                upscaledVer = ImageUtils.upscaleImage(capture);
+                }
+                default -> {
+                    processedImage = ImageUtils.upscaleImage(capture);
+                }
             }
+
+            // paddle is terrible with light text on white backgrounds
+            if (currentOCRMode == OCRMode.GAME_PADDLE_OCR) {
+                processedImage = ImageUtils.toGrayscale(processedImage);
+                processedImage = ImageUtils.enhanceContrast(processedImage, 1.0, 1.5);
+            }
+
             String modelToUse = (currentModel != null && !currentModel.isEmpty())?
                 currentModel
                 :
@@ -200,14 +221,14 @@ public class ProcessingPipeline {
 
             List<TranslationResult> results;
             if (currentOCRMode == OCRMode.GAME_PADDLE_OCR) {
-                results = performConsensusOCR(upscaledVer, modelToUse);
+                results = performConsensusOCR(processedImage, modelToUse);
             } else {
                 String ocrModel = (currentOCRMode == OCRMode.GAME_VISION_LLM || currentOCRMode == OCRMode.GAME_HYBRID)?
                     visionModelToUse
                     :
                     modelToUse
                 ;
-                results = ocrService.performOCR(upscaledVer, currentLang, ocrModel);
+                results = ocrService.performOCR(processedImage, currentLang, ocrModel);
             }
             System.out.println("OCR complete, found " + results.size() + " texts");
 
@@ -220,8 +241,8 @@ public class ProcessingPipeline {
 
             // Adjust coordinates back to original screen space
             double
-                scaleX = (double) upscaledVer.getWidth() / capture.getWidth(),
-                scaleY = (double) upscaledVer.getHeight() / capture.getHeight()
+                scaleX = (double) processedImage.getWidth() / capture.getWidth(),
+                scaleY = (double) processedImage.getHeight() / capture.getHeight()
             ;
             for (TranslationResult res : results) {
                 res.x = (int) (res.x / scaleX);
@@ -270,8 +291,7 @@ public class ProcessingPipeline {
         }
     }
 
-    // some scenarios benefit from this, but im not sure it's worth the time it
-    // takes
+    // some scenarios benefit from this, but im not sure it's worth the time it takes
     private List<TranslationResult> performConsensusOCR(BufferedImage original, String model) {
         System.out.println("Running 3x merge OCR...");
 
