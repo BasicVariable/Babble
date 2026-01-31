@@ -35,7 +35,7 @@ public class PlatformUtils {
             int exStyle = User32.INSTANCE.GetWindowLong(hwnd, GWL_EXSTYLE);
             User32.INSTANCE.SetWindowLong(
                 hwnd, GWL_EXSTYLE,
-                exStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE
+                exStyle | WS_EX_LAYERED | WS_EX_NOACTIVATE
             );
         }
     }
