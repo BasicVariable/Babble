@@ -7,15 +7,16 @@ See examples at the end of this file.
 
 ## Installation
 1. Download the latest release
-2. Download LMStudio (set your understanding to developer)
-3. Download an llm (in the Discover tab) for translation and maybe one for transcription (see the recommendations)
-4. Move to the developer tab and copy the link next to "reachable at:"
-5. Above that you should see "Select a model to load", click it and pick the model(s) you'd like to use
-6. Take note of or copy the llm tags somewhere
-7. Open Babble and click the gear icon
-8. Paste in the link in the "API Endpoint URL"
-9. Paste in the model tags for translation (and vision if you have one)
-10. Press "Save & Close" then start scanning with the play button
+  1. If you're on Mac or Linux you'll use the .jar file, please download Java JDK 25 before using it (https://www.oracle.com/java/technologies/downloads/#java25).
+3. Download LMStudio (set your understanding to developer)
+4. Download an llm (in the Discover tab) for translation and maybe one for transcription (see the recommendations)
+5. Move to the developer tab and copy the link next to "reachable at:"
+6. Above that you should see "Select a model to load", click it and pick the model(s) you'd like to use
+7. Take note of or copy the llm tags somewhere
+8. Open Babble and click the gear icon
+9. Paste in the link in the "API Endpoint URL"
+10. Paste in the model tags for translation (and vision if you have one)
+11. Press "Save & Close" then start scanning with the play button
 
 ## Settings
 
@@ -119,4 +120,5 @@ AI is a tool and it should be disclosed when it's being used, no matter the % of
   - Structure was dictated
   - The names for some elements were changed 
   - The colors were picked by me
+
   - Corrections were made to syntax (fxml)
