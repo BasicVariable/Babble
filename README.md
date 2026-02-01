@@ -3,7 +3,9 @@
 To put it simply, Babble is a privacy-oriented translation LLM wrapper that supports horizontal, vertical, stylized, and typed Japanese text (with other languages to come). Written in Java, it utilizes JavaFX, Tesseract, OCR, and LMStudio APIs for local transcription and translation of text from images
 captured on your device that STAY on your device.  
 
-See examples at the end of this file.
+See examples at the end of this file.  
+
+If you enjoy the project please star this repo!!
 
 ## Installation
 1. Download the latest release
@@ -122,3 +124,4 @@ AI is a tool and it should be disclosed when it's being used, no matter the % of
   - The colors were picked by me
 
   - Corrections were made to syntax (fxml)
+
